@@ -40,6 +40,12 @@ class MainViewModel(private val repository: BlockRepository) : ViewModel() {
             repository.setAllowContacts(enabled)
         }
     }
+
+    fun setBlockingEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.setBlockingEnabled(enabled)
+        }
+    }
 }
 
 class MainViewModelFactory(private val repository: BlockRepository) : ViewModelProvider.Factory {

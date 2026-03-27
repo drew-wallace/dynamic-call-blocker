@@ -6,6 +6,7 @@ An Android call-screening app focused on advanced blocking rules.
 - Block list with both **exact match** and **starts with** entries.
 - Allow list with both **exact match** and **starts with** entries.
 - Allow-list entries are exceptions to block-list entries.
+- Global toggle to enable/disable blocking entirely.
 - Toggle to allow contacts through block rules (default: enabled).
 - Uses Android's call-screening role; does **not** provide caller ID overlays or replace the dialer UI.
 
@@ -13,7 +14,11 @@ An Android call-screening app focused on advanced blocking rules.
 Incoming number is blocked only when:
 1. It matches a block rule (exact or prefix), and
 2. It does not match an allow rule (exact or prefix), and
-3. It is not in contacts when "Allow contacts" is enabled.
+3. It is not in contacts when "Allow contacts" is enabled, and
+4. Global blocking is enabled.
+
+For North American numbers, matching also accounts for optional leading country code `1`
+so prefixes like `919`, `1919`, and `+1919` all match the same incoming number pattern.
 
 ## Build
 ```bash

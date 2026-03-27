@@ -22,6 +22,7 @@ class BlockRepository(context: Context) {
     private val allowExactKey = stringSetPreferencesKey("allow_exact")
     private val allowPrefixKey = stringSetPreferencesKey("allow_prefix")
     private val allowContactsKey = booleanPreferencesKey("allow_contacts")
+    private val blockingEnabledKey = booleanPreferencesKey("blocking_enabled")
 
     val rulesFlow: Flow<BlockRules> = dataStore.data
         .catch { exception ->
@@ -33,11 +34,12 @@ class BlockRepository(context: Context) {
         }
         .map { prefs ->
             BlockRules(
-                blockExact = prefs[blockExactKey].orEmpty(),
-                blockPrefix = prefs[blockPrefixKey].orEmpty(),
-                allowExact = prefs[allowExactKey].orEmpty(),
-                allowPrefix = prefs[allowPrefixKey].orEmpty(),
-                allowContacts = prefs[allowContactsKey] ?: true
+                blockExact = prefs[blockExactKey].orEmpty().map(::normalizeForRule).filter { it.isNotEmpty() }.toSet(),
+                blockPrefix = prefs[blockPrefixKey].orEmpty().map(::normalizeForRule).filter { it.isNotEmpty() }.toSet(),
+                allowExact = prefs[allowExactKey].orEmpty().map(::normalizeForRule).filter { it.isNotEmpty() }.toSet(),
+                allowPrefix = prefs[allowPrefixKey].orEmpty().map(::normalizeForRule).filter { it.isNotEmpty() }.toSet(),
+                allowContacts = prefs[allowContactsKey] ?: true,
+                blockingEnabled = prefs[blockingEnabledKey] ?: true
             )
         }
 
@@ -64,6 +66,12 @@ class BlockRepository(context: Context) {
         }
     }
 
+    suspend fun setBlockingEnabled(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[blockingEnabledKey] = enabled
+        }
+    }
+
     private fun keyFor(listType: ListType, mode: MatchMode) = when (listType) {
         ListType.BLOCK -> if (mode == MatchMode.EXACT) blockExactKey else blockPrefixKey
         ListType.ALLOW -> if (mode == MatchMode.EXACT) allowExactKey else allowPrefixKey
@@ -71,7 +79,7 @@ class BlockRepository(context: Context) {
 
     companion object {
         fun normalizeForRule(number: String): String {
-            return number.filter { it.isDigit() || it == '+' }
+            return number.filter { it.isDigit() }
         }
     }
 }
@@ -81,7 +89,8 @@ data class BlockRules(
     val blockPrefix: Set<String> = emptySet(),
     val allowExact: Set<String> = emptySet(),
     val allowPrefix: Set<String> = emptySet(),
-    val allowContacts: Boolean = true
+    val allowContacts: Boolean = true,
+    val blockingEnabled: Boolean = true
 )
 
 enum class ListType { BLOCK, ALLOW }

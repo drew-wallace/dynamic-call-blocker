@@ -24,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -113,6 +114,13 @@ private fun App(viewModel: MainViewModel) {
 
             item {
                 RoleStatusCard(isRoleHeld = CallScreeningRoleHelper.isRoleHeld(activity))
+            }
+
+            item {
+                BlockingEnabledToggle(
+                    enabled = rules.blockingEnabled,
+                    onToggle = { viewModel.setBlockingEnabled(it) }
+                )
             }
 
             item {
@@ -213,6 +221,27 @@ private fun ContactToggle(enabled: Boolean, onToggle: (Boolean) -> Unit) {
 }
 
 @Composable
+private fun BlockingEnabledToggle(enabled: Boolean, onToggle: (Boolean) -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Enable call blocking")
+                Text(
+                    "Turn off to temporarily bypass all block rules.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Switch(checked = enabled, onCheckedChange = onToggle)
+        }
+    }
+}
+
+@Composable
 private fun RuleInputCard(
     input: String,
     onInputChange: (String) -> Unit,
@@ -236,24 +265,32 @@ private fun RuleInputCard(
                 FilterChip(
                     selected = listType == ListType.BLOCK,
                     onClick = { onListTypeChanged(ListType.BLOCK) },
-                    label = { Text("Block list") }
+                    label = { Text("Block list") },
+                    border = null,
+                    colors = chipColors()
                 )
                 FilterChip(
                     selected = listType == ListType.ALLOW,
                     onClick = { onListTypeChanged(ListType.ALLOW) },
-                    label = { Text("Allow list") }
+                    label = { Text("Allow list") },
+                    border = null,
+                    colors = chipColors()
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
                     selected = matchMode == MatchMode.EXACT,
                     onClick = { onMatchModeChanged(MatchMode.EXACT) },
-                    label = { Text("Exact") }
+                    label = { Text("Exact") },
+                    border = null,
+                    colors = chipColors()
                 )
                 FilterChip(
                     selected = matchMode == MatchMode.PREFIX,
                     onClick = { onMatchModeChanged(MatchMode.PREFIX) },
-                    label = { Text("Starts with") }
+                    label = { Text("Starts with") },
+                    border = null,
+                    colors = chipColors()
                 )
             }
             Button(onClick = onAdd, modifier = Modifier.fillMaxWidth()) {
@@ -277,3 +314,11 @@ private fun RuleRow(label: String, number: String, onDelete: () -> Unit) {
         }
     }
 }
+
+@Composable
+private fun chipColors() = FilterChipDefaults.filterChipColors(
+    selectedContainerColor = MaterialTheme.colorScheme.primary,
+    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+)
