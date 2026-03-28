@@ -20,6 +20,11 @@ Incoming number is blocked only when:
 For North American numbers, matching also accounts for optional leading country code `1`
 so prefixes like `919`, `1919`, and `+1919` all match the same incoming number pattern.
 
+Saved contacts can only be evaluated accurately when the app has `READ_CONTACTS`.
+On Android 11 and later, saved contacts can still be blocked when that permission is granted
+and "Allow contacts" is turned off. On Android 10, the platform may still bypass screening
+for some saved-contact calls.
+
 ## Build
 ```bash
 ./gradlew assembleDebug
@@ -28,6 +33,7 @@ so prefixes like `919`, `1919`, and `+1919` all match the same incoming number p
 ## Notes
 - Minimum SDK is 29 (Android 10) because this app relies on `ROLE_CALL_SCREENING` role APIs.
 - The app prompts for call-screening role and contacts permission on first launch.
+- Screening decisions are logged under the `DynamicCallBlocker` tag to help troubleshoot rule loading and match outcomes.
 
 
 ## Automated releases

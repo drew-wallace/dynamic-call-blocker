@@ -1,22 +1,19 @@
 package com.example.dynamiccallblocker
 
-import android.content.Context
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringSetPreferencesKey
-import androidx.datastore.preferences.preferencesDataStoreFile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-class BlockRepository(context: Context) {
-    private val dataStore = PreferenceDataStoreFactory.create {
-        context.preferencesDataStoreFile("blocking_rules.preferences_pb")
-    }
-
+class BlockRepository(
+    private val dataStore: DataStore<Preferences>
+) {
     private val blockExactKey = stringSetPreferencesKey("block_exact")
     private val blockPrefixKey = stringSetPreferencesKey("block_prefix")
     private val allowExactKey = stringSetPreferencesKey("allow_exact")

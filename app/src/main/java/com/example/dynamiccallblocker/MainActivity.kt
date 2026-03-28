@@ -45,7 +45,7 @@ import androidx.core.content.ContextCompat
 
 class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<MainViewModel> {
-        MainViewModelFactory(BlockRepository(applicationContext))
+        MainViewModelFactory(AppContainer.repository(applicationContext))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,6 +62,15 @@ class MainActivity : ComponentActivity() {
 private fun App(viewModel: MainViewModel) {
     val rules by viewModel.rules.collectAsState()
     val input by viewModel.inputNumber.collectAsState()
+    val activity = androidx.compose.ui.platform.LocalContext.current as ComponentActivity
+    var contactsPermissionGranted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                activity,
+                Manifest.permission.READ_CONTACTS
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
 
     val roleRequestLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -70,10 +79,9 @@ private fun App(viewModel: MainViewModel) {
     val contactsPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
+        contactsPermissionGranted = granted
         if (!granted) viewModel.setAllowContacts(false)
     }
-
-    val activity = androidx.compose.ui.platform.LocalContext.current as ComponentActivity
 
     LaunchedEffect(Unit) {
         val requestIntent = CallScreeningRoleHelper.createRequestIntent(activity)
@@ -126,6 +134,7 @@ private fun App(viewModel: MainViewModel) {
             item {
                 ContactToggle(
                     enabled = rules.allowContacts,
+                    contactsPermissionGranted = contactsPermissionGranted,
                     onToggle = { viewModel.setAllowContacts(it) }
                 )
             }
@@ -203,7 +212,22 @@ private fun RoleStatusCard(isRoleHeld: Boolean) {
 }
 
 @Composable
-private fun ContactToggle(enabled: Boolean, onToggle: (Boolean) -> Unit) {
+private fun ContactToggle(
+    enabled: Boolean,
+    contactsPermissionGranted: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    val permissionStatus = if (contactsPermissionGranted) {
+        "Contacts permission: granted."
+    } else {
+        "Contacts permission: not granted."
+    }
+    val platformNote = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        " On Android 11 and later, saved contacts can still be blocked when this toggle is off."
+    } else {
+        " On Android 10, saved contacts may still bypass screening because of platform limits."
+    }
+
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -213,7 +237,14 @@ private fun ContactToggle(enabled: Boolean, onToggle: (Boolean) -> Unit) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text("Allow contacts through block list")
-                Text("Enabled by default; contacts bypass block rules.", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    "Enabled by default; contacts bypass block rules.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    permissionStatus + platformNote,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
             Switch(checked = enabled, onCheckedChange = onToggle)
         }
